@@ -1,0 +1,152 @@
+warning: in the working copy of 'components/ugc-ads-generator-interface.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/components/ugc-ads-generator-interface.tsx b/components/ugc-ads-generator-interface.tsx[m
+[1mindex d780cb8..060aef8 100644[m
+[1m--- a/components/ugc-ads-generator-interface.tsx[m
+[1m+++ b/components/ugc-ads-generator-interface.tsx[m
+[36m@@ -95,11 +95,13 @@[m [mexport function UGCAdsGeneratorInterface({ onClose, projectTitle }: UGCAdsGenera[m
+   const [characterPresence, setCharacterPresence] = useState<'voiceover' | 'show' | 'partial'>('voiceover')[m
+   [m
+   // Character Selection (when not voiceover)[m
+[31m-  const [characterSource, setCharacterSource] = useState<'library' | 'upload' | 'describe'>('library')[m
+[32m+[m[32m  const [characterSource, setCharacterSource] = useState<'library' | 'upload' | 'describe'>('describe')[m
+   const [selectedAvatarId, setSelectedAvatarId] = useState<string>('')[m
+   const [characterFile, setCharacterFile] = useState<File | null>(null)[m
+   const [characterPreview, setCharacterPreview] = useState<string | null>(null)[m
+   const [characterDescription, setCharacterDescription] = useState<string>('')[m
+[32m+[m[32m  const [numberOfCharacters, setNumberOfCharacters] = useState<number>(1)[m
+[32m+[m[32m  const [characterDescriptions, setCharacterDescriptions] = useState<string[]>([''])[m
+   const [partialType, setPartialType] = useState<string>('')[m
+   [m
+   // Available avatars[m
+[36m@@ -258,17 +260,64 @@[m [mexport function UGCAdsGeneratorInterface({ onClose, projectTitle }: UGCAdsGenera[m
+     }[m
+   }[m
+ [m
+[32m+[m[32m  const getProductImageUrl = (product: any): string | null => {[m
+[32m+[m[32m    console.log('🖼️ Product data:', product)[m
+[32m+[m[41m    [m
+[32m+[m[32m    // Check generated_images array first (primary source from API)[m
+[32m+[m[32m    if (product.generated_images && product.generated_images.length > 0) {[m
+[32m+[m[32m      console.log('✅ Found image in generated_images:', product.generated_images[0])[m
+[32m+[m[32m      return product.generated_images[0][m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    // Fallback to other possible fields[m
+[32m+[m[32m    const fallbackUrl = product.image_url[m[41m [m
+[32m+[m[32m      || product.image[m[41m [m
+[32m+[m[32m      || product.content?.images?.[0][m
+[32m+[m[32m      || product.thumbnail_url[m
+[32m+[m[32m      || null[m
+[32m+[m[41m    [m
+[32m+[m[32m    if (fallbackUrl) {[m
+[32m+[m[32m      console.log('✅ Found image in fallback:', fallbackUrl)[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m      console.log('❌ No image found in product')[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    return fallbackUrl[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  const getAvatarImageUrl = (avatar: any): string | null => {[m
+[32m+[m[32m    console.log('👤 Avatar data:', avatar)[m
+[32m+[m[41m    [m
+[32m+[m[32m    // Check generated_images array first (primary source from API)[m
+[32m+[m[32m    if (avatar.generated_images && avatar.generated_images.length > 0) {[m
+[32m+[m[32m      console.log('✅ Found avatar image in generated_images:', avatar.generated_images[0])[m
+[32m+[m[32m      return avatar.generated_images[0][m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    // Fallback to other possible fields[m
+[32m+[m[32m    const fallbackUrl = avatar.image_url[m[41m [m
+[32m+[m[32m      || avatar.image[m[41m [m
+[32m+[m[32m      || avatar.content?.images?.[0][m
+[32m+[m[32m      || avatar.thumbnail_url[m
+[32m+[m[32m      || null[m
+[32m+[m[41m    [m
+[32m+[m[32m    if (fallbackUrl) {[m
+[32m+[m[32m      console.log('✅ Found avatar image in fallback:', fallbackUrl)[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m      console.log('❌ No image found in avatar')[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    return fallbackUrl[m
+[32m+[m[32m  }[m
+[32m+[m
+   const handleProductSelect = async (productId: string) => {[m
+     setSelectedProductId(productId)[m
+     [m
+[31m-    // Fetch product details and show preview[m
+[32m+[m[32m    // Fetch product details for AI suggestions[m
+     try {[m
+       const response = await fetch(`/api/product-mockups/${productId}`)[m
+       if (response.ok) {[m
+         const product = await response.json()[m
+[31m-        if (product.image_url) {[m
+[31m-          setCustomProductPreview(product.image_url)[m
+[31m-        }[m
+         [m
+         // Generate AI suggestions based on product[m
+         generateAISuggestions(product)[m
+[36m@@ -419,14 +468,9 @@[m [mexport function UGCAdsGeneratorInterface({ onClose, projectTitle }: UGCAdsGenera[m
+     [m
+     // Check character requirements if not voiceover[m
+     if (characterPresence === 'show') {[m
+[31m-      if (characterSource === 'library' && !selectedAvatarId) {[m
+[31m-        errors.push("Please select an avatar from your library")[m
+[31m-      }[m
+[31m-      if (characterSource === 'upload' && !characterFile) {[m
+[31m-        errors.push("Please upload a character image")[m
+[31m-      }[m
+[31m-      if (characterSource === 'describe' && !characterDescription.trim()) {[m
+[31m-        errors.push("Please describe your character")[m
+[32m+[m[32m      const emptyDescriptions = characterDescriptions.filter(desc => !desc.trim())[m
+[32m+[m[32m      if (emptyDescriptions.length > 0) {[m
+[32m+[m[32m        errors.push(`Please describe all ${numberOfCharacters} character(s)`)[m
+       }[m
+     }[m
+     [m
+[36m@@ -452,14 +496,9 @@[m [mexport function UGCAdsGeneratorInterface({ onClose, projectTitle }: UGCAdsGenera[m
+     [m
+     // Check character requirements if not voiceover[m
+     if (characterPresence === 'show') {[m
+[31m-      if (characterSource === 'library' && !selectedAvatarId) {[m
+[31m-        errors.push("Please select an avatar from your library")[m
+[31m-      }[m
+[31m-      if (characterSource === 'upload' && !characterFile) {[m
+[31m-        errors.push("Please upload a character image")[m
+[31m-      }[m
+[31m-      if (characterSource === 'describe' && !characterDescription.trim()) {[m
+[31m-        errors.push("Please describe your character")[m
+[32m+[m[32m      const emptyDescriptions = characterDescriptions.filter(desc => !desc.trim())[m
+[32m+[m[32m      if (emptyDescriptions.length > 0) {[m
+[32m+[m[32m        errors.push(`Please describe all ${numberOfCharacters} character(s)`)[m
+       }[m
+     }[m
+     [m
+[36m@@ -490,14 +529,9 @@[m [mexport function UGCAdsGeneratorInterface({ onClose, projectTitle }: UGCAdsGenera[m
+     [m
+     // Check character requirements if not voiceover[m
+     if (characterPresence === 'show') {[m
+[31m-      if (characterSource === 'library' && !selectedAvatarId) {[m
+[31m-        errors.push("Please select an avatar from your library")[m
+[31m-      }[m
+[31m-      if (characterSource === 'upload' && !characterFile) {[m
+[31m-        errors.push("Please upload a character image")[m
+[31m-      }[m
+[31m-      if (characterSource === 'describe' && !characterDescription.trim()) {[m
+[31m-        errors.push("Please describe your character")[m
+[32m+[m[32m      const emptyDescriptions = characterDescriptions.filter(desc => !desc.trim())[m
+[32m+[m[32m      if (emptyDescriptions.length > 0) {[m
+[32m+[m[32m        errors.push(`Please describe all ${numberOfCharacters} character(s)`)[m
+       }[m
+     }[m
+     [m
+[36m@@ -540,19 +574,13 @@[m [mexport function UGCAdsGeneratorInterface({ onClose, projectTitle }: UGCAdsGenera[m
+       [m
+       // Add character data if not voiceover[m
+       if (characterPresence !== 'voiceover') {[m
+[31m-        formData.append('characterSource', characterSource)[m
+[31m-        if (characterSource === 'library') {[m
+[31m-          formData.append('selectedAvatarId', selectedAvatarId)[m
+[31m-        } else if (characterSource === 'upload' && characterFile) {[m
+[31m-          formData.append('charac
